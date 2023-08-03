@@ -55,6 +55,22 @@ class ConfigServiceProviderTest extends TestCase
         $this->assertInstanceOf(Closure::class, config('export.exportable')->getObject());
     }
 
+    public function testShouldPrepareConfigForCacheWithOptimize() {
+
+        $_SERVER['argv'][1] = 'optimize';
+
+        (new ConfigServiceProvider($this->app))->register();
+
+        $this->assertInstanceOf(VarExportable::class, config('export.closure'));
+        $this->assertEquals('hello world', config('export.closure')->getObject()());
+
+        $this->assertInstanceOf(ExportableClass::class, config('export.exportableClass'));
+        $this->assertInstanceOf(VarExportable::class, config('export.regularClass'));
+
+        $this->assertInstanceOf(VarExportable::class, config('export.exportable'));
+        $this->assertInstanceOf(Closure::class, config('export.exportable')->getObject());
+    }
+
     protected function tearDown(): void
     {
         $_SERVER['argv'] = $this->oldArgv;
