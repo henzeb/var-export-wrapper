@@ -9,9 +9,9 @@ use Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Traversable;
 
 /**
- * @var $var mixed
- * @throws PhpVersionNotSupportedException
  * @return VarExportable|object|array|mixed
+ * @throws PhpVersionNotSupportedException
+ * @var $var mixed
  */
 function exportify($var)
 {
@@ -20,14 +20,22 @@ function exportify($var)
         \array_walk_recursive(
             $var,
             function (&$var) {
-                if (!is_exportable($var)) {
+                if (!is_exportable($var)
+                    || (is_object($var)
+                        && method_exists($var, '__get_state')
+                    )
+                ) {
                     $var = exportify($var);
                 }
             }
         );
     }
 
-    if(is_exportable($var)) {
+    if (is_exportable($var)
+        && (!is_object($var)
+            || !method_exists($var, '__get_state')
+        )
+    ) {
         return $var;
     }
 
@@ -64,4 +72,49 @@ function var_export($var, bool $return = false): ?string
         exportify($var),
         $return
     );
+}
+
+/**
+ * @param string $path
+ * @param $var
+ * @return false|int
+ * @throws PhpVersionNotSupportedException
+ */
+function var_export_file(string $path, $var)
+{
+    return \file_put_contents(
+        $path,
+        '<?php return '.var_export($var, true).';'.PHP_EOL
+    );
+}
+
+/**
+ * Allows for easy import of exported variables. If the variable is an array it will evaluate any
+ * VarExportable objects in the array.
+ *
+ * @param $var mixed
+ * @return mixed
+ */
+function var_import($var)
+{
+    if (\is_string($var)) {
+        $var = \is_file($var)? require $var:eval('return ' . $var . ';') ;
+    }
+
+    if (\is_array($var)) {
+        \array_walk_recursive(
+            $var,
+            function (&$var) {
+                if ($var instanceof VarExportable) {
+                    $var = $var->getObject();
+                }
+            }
+        );
+    }
+
+    if ($var instanceof VarExportable) {
+        return $var->getObject();
+    }
+
+    return $var;
 }

@@ -77,6 +77,38 @@ exportify(['recursive' => [new RegularClass(), fn()=>true]]); // returns nested 
 
 Note: `exportify` also iterates through objects implementing `Traversable` or `ArrayAccess`.
 
+#### __get_state
+
+`exportify` does not automatically wrap properties inside the object, and this is fine in most
+cases. But sometimes you want to export objects such as closures inside an object, or specify what to
+export. in order to do that, you can implement `__get_state` on your object. This method should
+return an array with the properties you want to restore with `__get_state`.
+
+````php
+class User {
+    private $name;
+    private $email;
+    
+    public function __construct($name, $email) {
+        $this->name = $name;
+        $this->email = $email;
+    }
+    
+    public function __get_state(): array {
+        return [
+            'name' => $this->name,
+            'email' => $this->email,
+        ];
+    }
+    
+    public static function __set_state($state): self {
+        return new self($state['name'], $state['email']);
+    }
+}
+````
+
+Note: you do not need to use exportify here yourself, it is done automatically.
+
 ## is_exportable
 
 Validates the given object or array. If not exportable, it returns false.
@@ -112,6 +144,31 @@ var_export(new RegularClass(), true); // returns the var_export string after wra
 var_export(new ExportableClass(), true); // returns the var_export string without wrapping
 var_export([[fn()=>true]], true); // returns the var_export string after wrapping closure
  
+````
+
+### var_export_file
+
+`var_export_file` is the same as `var_export`, but it exports to a file instead of returning.
+
+````php
+use function Henzeb\VarExportWrapper\Support\Functions\var_export_file;
+
+var_export_file('/tmp/config.php',[[fn()=>>true]]); // writes the var_export string to /tmp/config.php after wrapping closure
+
+````
+### var_import
+
+`var_import` is useful when you want to import a var_exported string or file. This function
+will automatically unwrap the `VarExportable` instances. You can also pass an array that was
+imported in another way, but still contains `VarExportable` instances.
+
+````php
+use function Henzeb\VarExportWrapper\Support\Functions\var_import;
+use function Henzeb\VarExportWrapper\Support\Functions\var_export;
+ 
+var_import(var_export(fn()=>true)); // returns the closure
+var_import('path/to/var_export.php'); // returns the object which is exported in the specified file
+var_import([new \Henzeb\VarExportWrapper\VarExportable(fn()=>'hello')]); // returns the array with closure
 ````
 
 ### Laravel Config

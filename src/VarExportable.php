@@ -6,11 +6,14 @@ use Closure;
 use Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Laravel\SerializableClosure\SerializableClosure;
 use Laravel\SerializableClosure\UnsignedSerializableClosure;
+use function Henzeb\VarExportWrapper\Support\Functions\exportify;
 use function Henzeb\VarExportWrapper\Support\Functions\is_exportable;
+use function Henzeb\VarExportWrapper\Support\Functions\var_import;
 
 class VarExportable
 {
     private $object;
+    private ?string $class = null;
 
     /**
      * @throws PhpVersionNotSupportedException
@@ -24,11 +27,17 @@ class VarExportable
         }
 
         /**
-         * If the object implements __set_state, it does not need to serialize
+         * If the object implements __set_state, it does not need to serialize,
+         * unless it has __get_state implemented.
          */
         if (is_exportable($var)) {
-            $this->object = $var;
-            return;
+            if (!method_exists($var, '__get_state')) {
+                $this->object = $var;
+                return;
+            }
+
+            $this->class = get_class($var);
+            $var = exportify($var->__get_state());
         }
 
         $this->object = serialize(
@@ -38,13 +47,28 @@ class VarExportable
 
     public static function __set_state(array $state)
     {
-        return self::setState($state['object']);
+        return self::setState($state['object'], $state['class'] ?? null);
     }
 
-    private static function setState($export): object
+    /**
+     * @param object|string $export
+     * @param string|null $class
+     * @return object|Closure|mixed
+     * @throws PhpVersionNotSupportedException
+     */
+    private static function setState($export, ?string $class): object
     {
+
+
         if (is_string($export)) {
             $export = unserialize($export);
+        }
+
+        if($class) {
+            /** @var object $class */
+            return $class::__set_state(
+                var_import($export)
+            );
         }
 
         if ($export instanceof SerializableClosure
@@ -61,6 +85,6 @@ class VarExportable
      */
     public function getObject()
     {
-        return self::setState($this->object);
+        return self::setState($this->object, $this->class);
     }
 }

@@ -3,12 +3,15 @@
 namespace Henzeb\VarExportWrapper\Tests\Unit;
 
 use Closure;
+use Henzeb\VarExportWrapper\Tests\Fixtures\CustomExportableClass;
 use Henzeb\VarExportWrapper\Tests\Fixtures\ExportableClass;
 use Henzeb\VarExportWrapper\Tests\Fixtures\RegularClass;
 use Henzeb\VarExportWrapper\VarExportable;
 use Laravel\SerializableClosure\SerializableClosure;
 use Laravel\SerializableClosure\UnsignedSerializableClosure;
 use PHPUnit\Framework\TestCase;
+use function Henzeb\VarExportWrapper\Support\Functions\var_export as varExport;
+use function Henzeb\VarExportWrapper\Support\Functions\var_import;
 
 class VarExportableTest extends TestCase
 {
@@ -127,5 +130,17 @@ class VarExportableTest extends TestCase
         $exportable = eval($export);
 
         $this->assertEquals('world', $exportable->getVariable());
+    }
+
+    public function testExportsWithGetState() {
+        $exportable = new CustomExportableClass();
+
+        $exportable->setVariable(fn() => 'hello world');
+
+        $exportable = var_import(
+            varExport($exportable, true)
+        );
+
+        $this->assertEquals('hello world', $exportable->getVariable()());
     }
 }

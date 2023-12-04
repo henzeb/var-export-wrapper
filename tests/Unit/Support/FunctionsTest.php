@@ -9,6 +9,8 @@ use PHPUnit\Framework\TestCase;
 use function Henzeb\VarExportWrapper\Support\Functions\exportify;
 use function Henzeb\VarExportWrapper\Support\Functions\is_exportable;
 use function Henzeb\VarExportWrapper\Support\Functions\var_export as varExport;
+use function Henzeb\VarExportWrapper\Support\Functions\var_export_file;
+use function Henzeb\VarExportWrapper\Support\Functions\var_import;
 
 class FunctionsTest extends TestCase
 {
@@ -91,5 +93,57 @@ class FunctionsTest extends TestCase
         $this->assertEquals(var_export(exportify($fn), true), varExport($fn, true));
         $this->assertEquals(var_export([exportify($fn)], true), varExport([$fn], true));
         $this->assertEquals(var_export([['fn' => exportify($fn)]], true), varExport([['fn' => $fn]], true));
+    }
+
+    public function testVarImportWithClosure()
+    {
+        $fn = fn() => 'hello';
+
+        $this->assertEquals($fn,var_import(new VarExportable($fn)));
+        $this->assertEquals($fn(), var_import(new VarExportable($fn))() );
+    }
+
+    public function testVarImportWithClosureInArray()
+    {
+        $array = [fn() => 'hello', 'world'];
+
+        $this->assertEquals($array,var_import(exportify($array)));
+    }
+
+    public function testVarImportWithExportString()
+    {
+        $array = [fn() => 'hello', 'world'];
+
+        $this->assertEquals($array,var_import(varExport($array, true)));
+    }
+
+    public function testVarImportWithExportFile()
+    {
+        $array = [fn() => 'hello', 'world'];
+        $file = './tests/Fixtures/config.php';
+
+        $this->assertEquals($array,var_import($file));
+    }
+
+    public function testVarExportFile()
+    {
+        $filename = './tests/Fixtures/tmp.config';
+        $this->tearDown();
+
+        $array = [fn() => 'hello', 'world'];
+
+        $result = var_export_file($filename, $array);
+        $this->assertTrue($result >= 500);
+
+        $this->assertEquals($array,var_import($filename));
+
+    }
+
+    protected function tearDown(): void
+    {
+        $filename = './tests/Fixtures/tmp.config';
+        if(file_exists($filename)) {
+            unlink('./tests/Fixtures/tmp.config');
+        }
     }
 }
