@@ -37,10 +37,11 @@ class VarExportable
             }
 
             $this->class = get_class($var);
-            $var = exportify($var->__get_state());
+            $this->object = exportify($var->__get_state());
+            return;
         }
 
-        $this->object = serialize(
+        $this->object = \serialize(
             $var
         );
     }
@@ -58,8 +59,6 @@ class VarExportable
      */
     private static function setState($export, ?string $class): object
     {
-
-
         if (is_string($export)) {
             $export = unserialize($export);
         }

@@ -84,7 +84,7 @@ function var_export_file(string $path, $var)
 {
     return \file_put_contents(
         $path,
-        '<?php return '.var_export($var, true).';'.PHP_EOL
+        '<?php return ' . var_export($var, true) . ';' . PHP_EOL
     );
 }
 
@@ -98,18 +98,14 @@ function var_export_file(string $path, $var)
 function var_import($var)
 {
     if (\is_string($var)) {
-        $var = \is_file($var)? require $var:eval('return ' . $var . ';') ;
+        $var = \is_file($var) ? require $var : eval('return ' . $var . ';');
     }
 
     if (\is_array($var)) {
-        \array_walk_recursive(
-            $var,
-            function (&$var) {
-                if ($var instanceof VarExportable) {
-                    $var = $var->getObject();
-                }
+        foreach ($var as &$item)
+            if ($item instanceof VarExportable) {
+                $item = $item->getObject();
             }
-        );
     }
 
     if ($var instanceof VarExportable) {
