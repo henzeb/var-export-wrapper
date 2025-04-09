@@ -24,8 +24,8 @@
         "laravel/serializable-closure": "^v1.3"
     },
     "require-dev": {
-        "orchestra/testbench": "^7|^8.5|^9.0",
-        "phpunit/phpunit": "^9.6.10|^10.0"
+        "orchestra/testbench": "^7|^8.5|^9.0|^10.0",
+        "phpunit/phpunit": "^9.6.10|^10.0|^11.0"
     },
     "autoload": {
         "files": [
