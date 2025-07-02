@@ -6,12 +6,12 @@ on:
       - master
       - main
     paths-ignore:
-      - '**.md'
-      - '**.yml'
+      - "**.md"
+      - "**.yml"
   pull_request:
     paths-ignore:
-      - '**.md'
-      - '**.yml'
+      - "**.md"
+      - "**.yml"
 jobs:
   tests:
     name: PHP ${{ matrix.php }} - ${{ matrix.stability }}
@@ -21,8 +21,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [ '8.0','8.3' ]
-        stability: [ prefer-lowest, prefer-stable ]
+        php: ["8.0", "8.4"]
+        stability: [prefer-lowest, prefer-stable]
 
     steps:
       - name: Checkout Code
@@ -67,6 +67,6 @@ jobs:
         env:
           CC_TEST_REPORTER_ID: ${{ env.CC_TOKEN }}
         with:
-          coverageCommand: ''
+          coverageCommand: ""
           coverageLocations: ./coverage.xml:clover
         if: ${{ !env.ACT && env.CC_TOKEN && matrix.stability == 'prefer-stable' && matrix.php == '8.2' }}
