@@ -2,6 +2,8 @@
 
 namespace Henzeb\VarExportWrapper\Tests\Unit\Support;
 
+use Henzeb\VarExportWrapper\Tests\Fixtures\ArrayAccessClass;
+use Henzeb\VarExportWrapper\Tests\Fixtures\ChildArrayAccessClass;
 use Henzeb\VarExportWrapper\Tests\Fixtures\ExportableClass;
 use Henzeb\VarExportWrapper\Tests\Fixtures\RegularClass;
 use Henzeb\VarExportWrapper\VarExportable;
@@ -14,6 +16,33 @@ use function Henzeb\VarExportWrapper\Support\Functions\var_import;
 
 class FunctionsTest extends TestCase
 {
+    public function testExportifyWrapsPropertiesOfArrayAccessObjects()
+    {
+        $object = new ArrayAccessClass();
+
+        $this->assertSame($object, exportify($object));
+
+        foreach (['public', 'protected', 'private'] as $property) {
+            $this->assertInstanceOf(VarExportable::class, $object->get($property));
+            $this->assertSame($property, $object->get($property)->getObject()());
+        }
+
+        $this->assertInstanceOf(VarExportable::class, $object->get('nested')['closure']);
+        $this->assertSame('nested', $object->get('nested')['closure']->getObject()());
+        $this->assertSame('scalar', $object->get('nested')['scalar']);
+    }
+
+    public function testExportifyWrapsInheritedPrivatePropertiesOfArrayAccessObjects()
+    {
+        $object = new ChildArrayAccessClass();
+
+        exportify($object);
+
+        $this->assertInstanceOf(VarExportable::class, $object->get('private'));
+        $this->assertInstanceOf(VarExportable::class, $object->getOwn());
+        $this->assertSame('own', $object->getOwn()->getObject()());
+    }
+
     public function testExportWithClosure()
     {
         $exportable = exportify(
@@ -133,7 +162,7 @@ class FunctionsTest extends TestCase
         $array = [fn() => 'hello', 'world'];
 
         $result = var_export_file($filename, $array);
-        $this->assertTrue($result >= 500);
+        $this->assertSame(filesize($filename), $result);
 
         $this->assertEquals($array,var_import($filename));
 

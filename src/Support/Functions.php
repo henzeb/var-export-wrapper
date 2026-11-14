@@ -6,6 +6,7 @@ namespace Henzeb\VarExportWrapper\Support\Functions;
 use ArrayAccess;
 use Henzeb\VarExportWrapper\VarExportable;
 use Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
+use ReflectionProperty;
 use Traversable;
 
 /**
@@ -15,20 +16,50 @@ use Traversable;
  */
 function exportify($var)
 {
-    if (\is_array($var) || $var instanceof ArrayAccess || $var instanceof Traversable) {
+    $walker = function (&$item) {
+        if (!is_exportable($item)
+            || (is_object($item)
+                && method_exists($item, '__get_state')
+            )
+        ) {
+            $item = exportify($item);
+        }
+    };
 
-        \array_walk_recursive(
-            $var,
-            function (&$var) {
-                if (!is_exportable($var)
-                    || (is_object($var)
-                        && method_exists($var, '__get_state')
-                    )
-                ) {
-                    $var = exportify($var);
-                }
+    if (\is_array($var)) {
+        \array_walk_recursive($var, $walker);
+    } elseif ($var instanceof ArrayAccess || $var instanceof Traversable) {
+        foreach (\get_mangled_object_vars($var) as $key => $value) {
+            $exported = $value;
+
+            if (\is_array($exported)) {
+                \array_walk_recursive($exported, $walker);
+            } else {
+                $walker($exported);
             }
-        );
+
+            if ($exported === $value) {
+                continue;
+            }
+
+            $parts = \explode("\0", (string)$key);
+            $declared = \count($parts) === 3 && $parts[1] !== '*';
+
+            $property = new ReflectionProperty(
+                $declared ? $parts[1] : $var,
+                \count($parts) === 3 ? $parts[2] : (string)$key
+            );
+
+            if (\method_exists($property, 'isReadOnly') && $property->isReadOnly()) {
+                continue;
+            }
+
+            if (\PHP_VERSION_ID < 80100) {
+                $property->setAccessible(true);
+            }
+
+            $property->setValue($var, $exported);
+        }
     }
 
     if (is_exportable($var)
