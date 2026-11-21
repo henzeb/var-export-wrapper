@@ -2,7 +2,6 @@
 
 namespace Henzeb\VarExportWrapper\Support\Functions;
 
-
 use ArrayAccess;
 use Henzeb\VarExportWrapper\VarExportable;
 use Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
@@ -18,7 +17,8 @@ function exportify($var)
 {
     $walker = function (&$item) {
         if (!is_exportable($item)
-            || (is_object($item)
+            || (
+                is_object($item)
                 && method_exists($item, '__get_state')
             )
         ) {
@@ -63,7 +63,8 @@ function exportify($var)
     }
 
     if (is_exportable($var)
-        && (!is_object($var)
+        && (
+            !is_object($var)
             || !method_exists($var, '__get_state')
         )
     ) {
@@ -133,10 +134,11 @@ function var_import($var)
     }
 
     if (\is_array($var)) {
-        foreach ($var as &$item)
+        foreach ($var as &$item) {
             if ($item instanceof VarExportable) {
                 $item = $item->getObject();
             }
+        }
     }
 
     if ($var instanceof VarExportable) {

@@ -6,7 +6,8 @@ class ExportableClass
 {
     private $myVariable;
 
-    public function setVariable($variable) {
+    public function setVariable($variable)
+    {
         $this->myVariable = $variable;
     }
 

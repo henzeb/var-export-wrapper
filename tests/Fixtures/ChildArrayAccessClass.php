@@ -9,7 +9,7 @@ class ChildArrayAccessClass extends ArrayAccessClass
     public function __construct()
     {
         parent::__construct();
-        $this->own = static fn() => 'own';
+        $this->own = static fn () => 'own';
     }
 
     public function getOwn()

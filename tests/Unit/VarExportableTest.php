@@ -10,6 +10,7 @@ use Henzeb\VarExportWrapper\VarExportable;
 use Laravel\SerializableClosure\SerializableClosure;
 use Laravel\SerializableClosure\UnsignedSerializableClosure;
 use PHPUnit\Framework\TestCase;
+
 use function Henzeb\VarExportWrapper\Support\Functions\var_export as varExport;
 use function Henzeb\VarExportWrapper\Support\Functions\var_import;
 
@@ -30,9 +31,9 @@ class VarExportableTest extends TestCase
         $this->assertEquals('test', $closure());
 
         $export = 'return ' . var_export(
-               $exportable,
-                true
-            ) . ';';
+            $exportable,
+            true
+        ) . ';';
 
         $closure = eval($export);
 
@@ -58,9 +59,9 @@ class VarExportableTest extends TestCase
         $this->assertEquals('test', $closure());
 
         $export = 'return ' . var_export(
-                $exportable,
-                true
-            ) . ';';
+            $exportable,
+            true
+        ) . ';';
 
         $closure = eval($export);
 
@@ -72,12 +73,12 @@ class VarExportableTest extends TestCase
     public function testExportsUnsignedSerializableClosure(): void
     {
         $exportable = new VarExportable(
-        new UnsignedSerializableClosure(
-            function () {
-                return 'test';
-            }
-        )
-    );
+            new UnsignedSerializableClosure(
+                function () {
+                    return 'test';
+                }
+            )
+        );
 
         $closure = $exportable->getObject();
 
@@ -86,9 +87,9 @@ class VarExportableTest extends TestCase
         $this->assertEquals('test', $closure());
 
         $export = 'return ' . var_export(
-                $exportable,
-                true
-            ) . ';';
+            $exportable,
+            true
+        ) . ';';
         $closure = eval($export);
 
         $this->assertInstanceOf(Closure::class, $closure);
@@ -96,7 +97,8 @@ class VarExportableTest extends TestCase
         $this->assertEquals('test', $closure());
     }
 
-    public function testExportsExportableClass() {
+    public function testExportsExportableClass()
+    {
         $exportable = new ExportableClass();
         $exportable->setVariable('world');
         $exportable = new VarExportable(
@@ -106,15 +108,16 @@ class VarExportableTest extends TestCase
         $this->assertEquals('world', $exportable->getObject()->getVariable());
 
         $export = 'return ' . var_export(
-                $exportable,
-                true
-            ) . ';';
+            $exportable,
+            true
+        ) . ';';
         $exportable = eval($export);
 
         $this->assertEquals('hello world', $exportable->getVariable());
     }
 
-    public function testExportsRegularClass() {
+    public function testExportsRegularClass()
+    {
         $exportable = new RegularClass();
         $exportable->setVariable('world');
         $exportable = new VarExportable(
@@ -124,18 +127,19 @@ class VarExportableTest extends TestCase
         $this->assertEquals('world', $exportable->getObject()->getVariable());
 
         $export = 'return ' . var_export(
-                $exportable,
-                true
-            ) . ';';
+            $exportable,
+            true
+        ) . ';';
         $exportable = eval($export);
 
         $this->assertEquals('world', $exportable->getVariable());
     }
 
-    public function testExportsWithGetState() {
+    public function testExportsWithGetState()
+    {
         $exportable = new CustomExportableClass();
 
-        $exportable->setVariable(fn() => 'hello world');
+        $exportable->setVariable(fn () => 'hello world');
 
         $exportable = var_import(
             varExport($exportable, true)

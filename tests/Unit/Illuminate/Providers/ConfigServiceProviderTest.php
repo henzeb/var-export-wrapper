@@ -8,6 +8,7 @@ use Henzeb\VarExportWrapper\Tests\Fixtures\ExportableClass;
 use Henzeb\VarExportWrapper\Tests\Fixtures\RegularClass;
 use Henzeb\VarExportWrapper\VarExportable;
 use Orchestra\Testbench\TestCase;
+
 use function Henzeb\VarExportWrapper\Support\Functions\exportify;
 
 class ConfigServiceProviderTest extends TestCase
@@ -23,15 +24,16 @@ class ConfigServiceProviderTest extends TestCase
     {
         $app['config']->set([
             'export' => [
-                'closure' => fn() => 'hello world',
+                'closure' => fn () => 'hello world',
                 'exportableClass' => new ExportableClass(),
                 'regularClass' => new RegularClass(),
-                'exportable' => exportify(fn()=>'hello world')
+                'exportable' => exportify(fn () => 'hello world')
             ]
         ]);
     }
 
-    public function testShouldPrepareConfigForCache() {
+    public function testShouldPrepareConfigForCache()
+    {
         $_SERVER['argv'][1] = 'somethingElse';
         (new ConfigServiceProvider($this->app))->register();
 
@@ -55,7 +57,8 @@ class ConfigServiceProviderTest extends TestCase
         $this->assertInstanceOf(Closure::class, config('export.exportable')->getObject());
     }
 
-    public function testShouldPrepareConfigForCacheWithOptimize() {
+    public function testShouldPrepareConfigForCacheWithOptimize()
+    {
 
         $_SERVER['argv'][1] = 'optimize';
 

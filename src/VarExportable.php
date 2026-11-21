@@ -6,6 +6,7 @@ use Closure;
 use Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Laravel\SerializableClosure\SerializableClosure;
 use Laravel\SerializableClosure\UnsignedSerializableClosure;
+
 use function Henzeb\VarExportWrapper\Support\Functions\exportify;
 use function Henzeb\VarExportWrapper\Support\Functions\is_exportable;
 use function Henzeb\VarExportWrapper\Support\Functions\var_import;
@@ -20,8 +21,7 @@ class VarExportable
      */
     public function __construct(
         object $var
-    )
-    {
+    ) {
         if ($var instanceof Closure) {
             $var = new SerializableClosure($var);
         }
@@ -63,7 +63,7 @@ class VarExportable
             $export = unserialize($export);
         }
 
-        if($class) {
+        if ($class) {
             /** @var object $class */
             return $class::__set_state(
                 var_import($export)

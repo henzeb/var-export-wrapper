@@ -13,10 +13,10 @@ class ArrayAccessClass implements ArrayAccess
 
     public function __construct()
     {
-        $this->public = static fn() => 'public';
-        $this->protected = static fn() => 'protected';
-        $this->private = static fn() => 'private';
-        $this->nested = ['closure' => static fn() => 'nested', 'scalar' => 'scalar'];
+        $this->public = static fn () => 'public';
+        $this->protected = static fn () => 'protected';
+        $this->private = static fn () => 'private';
+        $this->nested = ['closure' => static fn () => 'nested', 'scalar' => 'scalar'];
     }
 
     public function get(string $property)

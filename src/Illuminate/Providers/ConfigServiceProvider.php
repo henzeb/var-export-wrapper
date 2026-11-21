@@ -6,6 +6,7 @@ use Illuminate\Foundation\Console\ConfigCacheCommand;
 use Illuminate\Foundation\Console\OptimizeCommand;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
+
 use function Henzeb\VarExportWrapper\Support\Functions\exportify;
 
 class ConfigServiceProvider extends ServiceProvider

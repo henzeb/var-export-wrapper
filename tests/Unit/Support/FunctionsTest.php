@@ -8,6 +8,7 @@ use Henzeb\VarExportWrapper\Tests\Fixtures\ExportableClass;
 use Henzeb\VarExportWrapper\Tests\Fixtures\RegularClass;
 use Henzeb\VarExportWrapper\VarExportable;
 use PHPUnit\Framework\TestCase;
+
 use function Henzeb\VarExportWrapper\Support\Functions\exportify;
 use function Henzeb\VarExportWrapper\Support\Functions\is_exportable;
 use function Henzeb\VarExportWrapper\Support\Functions\var_export as varExport;
@@ -99,7 +100,7 @@ class FunctionsTest extends TestCase
         $this->assertTrue(is_exportable(new ExportableClass()));
 
         $this->assertFalse(is_exportable(new RegularClass()));
-        $this->assertFalse(is_exportable(fn() => true));
+        $this->assertFalse(is_exportable(fn () => true));
     }
 
     public function testIsArrayExportable()
@@ -113,12 +114,12 @@ class FunctionsTest extends TestCase
         $this->assertFalse(is_exportable([new ExportableClass(), new RegularClass()]));
         $this->assertFalse(is_exportable([new ExportableClass(), new RegularClass()]));
         $this->assertFalse(is_exportable([new RegularClass()]));
-        $this->assertFalse(is_exportable([fn() => true]));
+        $this->assertFalse(is_exportable([fn () => true]));
     }
 
     public function testVarExport()
     {
-        $fn = fn() => true;
+        $fn = fn () => true;
         $this->assertEquals(var_export(exportify($fn), true), varExport($fn, true));
         $this->assertEquals(var_export([exportify($fn)], true), varExport([$fn], true));
         $this->assertEquals(var_export([['fn' => exportify($fn)]], true), varExport([['fn' => $fn]], true));
@@ -126,32 +127,32 @@ class FunctionsTest extends TestCase
 
     public function testVarImportWithClosure()
     {
-        $fn = fn() => 'hello';
+        $fn = fn () => 'hello';
 
-        $this->assertEquals($fn,var_import(new VarExportable($fn)));
-        $this->assertEquals($fn(), var_import(new VarExportable($fn))() );
+        $this->assertEquals($fn, var_import(new VarExportable($fn)));
+        $this->assertEquals($fn(), var_import(new VarExportable($fn))());
     }
 
     public function testVarImportWithClosureInArray()
     {
-        $array = [fn() => 'hello', 'world'];
+        $array = [fn () => 'hello', 'world'];
 
-        $this->assertEquals($array,var_import(exportify($array)));
+        $this->assertEquals($array, var_import(exportify($array)));
     }
 
     public function testVarImportWithExportString()
     {
-        $array = [fn() => 'hello', 'world'];
+        $array = [fn () => 'hello', 'world'];
 
-        $this->assertEquals($array,var_import(varExport($array, true)));
+        $this->assertEquals($array, var_import(varExport($array, true)));
     }
 
     public function testVarImportWithExportFile()
     {
-        $array = [fn() => 'hello', 'world'];
+        $array = [fn () => 'hello', 'world'];
         $file = './tests/Fixtures/config.php';
 
-        $this->assertEquals($array,var_import($file));
+        $this->assertEquals($array, var_import($file));
     }
 
     public function testVarExportFile()
@@ -159,19 +160,19 @@ class FunctionsTest extends TestCase
         $filename = './tests/Fixtures/tmp.config';
         $this->tearDown();
 
-        $array = [fn() => 'hello', 'world'];
+        $array = [fn () => 'hello', 'world'];
 
         $result = var_export_file($filename, $array);
         $this->assertSame(filesize($filename), $result);
 
-        $this->assertEquals($array,var_import($filename));
+        $this->assertEquals($array, var_import($filename));
 
     }
 
     protected function tearDown(): void
     {
         $filename = './tests/Fixtures/tmp.config';
-        if(file_exists($filename)) {
+        if (file_exists($filename)) {
             unlink('./tests/Fixtures/tmp.config');
         }
     }
