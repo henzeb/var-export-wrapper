@@ -2,8 +2,6 @@
 
 namespace Henzeb\VarExportWrapper\Illuminate\Providers;
 
-use Illuminate\Foundation\Console\ConfigCacheCommand;
-use Illuminate\Foundation\Console\OptimizeCommand;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 
@@ -13,12 +11,9 @@ class ConfigServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $commands = [
-            ConfigCacheCommand::getDefaultName() ?? 'config:cache',
-            OptimizeCommand::getDefaultName() ?? 'optimize'
-        ];
+        $argv = $_SERVER['argv'] ?? [];
 
-        if (!empty($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], $commands)) {
+        if (is_array($argv) && in_array($argv[1] ?? null, ['config:cache', 'optimize'], true)) {
             exportify(
                 Config::getFacadeRoot()
             );

@@ -2,6 +2,7 @@
 
 namespace Henzeb\VarExportWrapper\Tests\Unit\Support;
 
+use Closure;
 use Henzeb\VarExportWrapper\Tests\Fixtures\ArrayAccessClass;
 use Henzeb\VarExportWrapper\Tests\Fixtures\ChildArrayAccessClass;
 use Henzeb\VarExportWrapper\Tests\Fixtures\ExportableClass;
@@ -129,7 +130,7 @@ class FunctionsTest extends TestCase
     {
         $fn = fn () => 'hello';
 
-        $this->assertEquals($fn, var_import(new VarExportable($fn)));
+        $this->assertSameResults($fn, var_import(new VarExportable($fn)));
         $this->assertEquals($fn(), var_import(new VarExportable($fn))());
     }
 
@@ -137,14 +138,14 @@ class FunctionsTest extends TestCase
     {
         $array = [fn () => 'hello', 'world'];
 
-        $this->assertEquals($array, var_import(exportify($array)));
+        $this->assertSameResults($array, var_import(exportify($array)));
     }
 
     public function testVarImportWithExportString()
     {
         $array = [fn () => 'hello', 'world'];
 
-        $this->assertEquals($array, var_import(varExport($array, true)));
+        $this->assertSameResults($array, var_import(varExport($array, true)));
     }
 
     public function testVarImportWithExportFile()
@@ -152,7 +153,7 @@ class FunctionsTest extends TestCase
         $array = [fn () => 'hello', 'world'];
         $file = './tests/Fixtures/config.php';
 
-        $this->assertEquals($array, var_import($file));
+        $this->assertSameResults($array, var_import($file));
     }
 
     public function testVarExportFile()
@@ -165,8 +166,31 @@ class FunctionsTest extends TestCase
         $result = var_export_file($filename, $array);
         $this->assertSame(filesize($filename), $result);
 
-        $this->assertEquals($array, var_import($filename));
+        $this->assertSameResults($array, var_import($filename));
 
+    }
+
+    private function assertSameResults(mixed $expected, mixed $actual): void
+    {
+        if ($expected instanceof Closure) {
+            $this->assertInstanceOf(Closure::class, $actual);
+            $this->assertSame($expected(), $actual());
+
+            return;
+        }
+
+        if (is_array($expected)) {
+            $this->assertIsArray($actual);
+            $this->assertSame(array_keys($expected), array_keys($actual));
+
+            foreach ($expected as $key => $value) {
+                $this->assertSameResults($value, $actual[$key]);
+            }
+
+            return;
+        }
+
+        $this->assertSame($expected, $actual);
     }
 
     protected function tearDown(): void

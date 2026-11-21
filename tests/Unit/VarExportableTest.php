@@ -10,6 +10,7 @@ use Henzeb\VarExportWrapper\VarExportable;
 use Laravel\SerializableClosure\SerializableClosure;
 use Laravel\SerializableClosure\UnsignedSerializableClosure;
 use PHPUnit\Framework\TestCase;
+use UnexpectedValueException;
 
 use function Henzeb\VarExportWrapper\Support\Functions\var_export as varExport;
 use function Henzeb\VarExportWrapper\Support\Functions\var_import;
@@ -146,5 +147,12 @@ class VarExportableTest extends TestCase
         );
 
         $this->assertEquals('hello world', $exportable->getVariable()());
+    }
+
+    public function testThrowsWhenStateIsNotAnObject(): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+
+        VarExportable::__set_state(['object' => serialize('not an object')]);
     }
 }

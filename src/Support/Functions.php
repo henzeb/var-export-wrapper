@@ -4,18 +4,12 @@ namespace Henzeb\VarExportWrapper\Support\Functions;
 
 use ArrayAccess;
 use Henzeb\VarExportWrapper\VarExportable;
-use Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use ReflectionProperty;
 use Traversable;
 
-/**
- * @return VarExportable|object|array|mixed
- * @throws PhpVersionNotSupportedException
- * @var $var mixed
- */
-function exportify($var)
+function exportify(mixed $var): mixed
 {
-    $walker = function (&$item) {
+    $walker = function (mixed &$item): void {
         if (!is_exportable($item)
             || (
                 is_object($item)
@@ -46,39 +40,31 @@ function exportify($var)
             $declared = \count($parts) === 3 && $parts[1] !== '*';
 
             $property = new ReflectionProperty(
-                $declared ? $parts[1] : $var,
+                $declared && \class_exists($parts[1]) ? $parts[1] : $var,
                 \count($parts) === 3 ? $parts[2] : (string)$key
             );
 
-            if (\method_exists($property, 'isReadOnly') && $property->isReadOnly()) {
+            if ($property->isReadOnly()) {
                 continue;
-            }
-
-            if (\PHP_VERSION_ID < 80100) {
-                $property->setAccessible(true);
             }
 
             $property->setValue($var, $exported);
         }
     }
 
-    if (is_exportable($var)
+    if (is_object($var)
         && (
-            !is_object($var)
-            || !method_exists($var, '__get_state')
+            !is_exportable($var)
+            || method_exists($var, '__get_state')
         )
     ) {
-        return $var;
+        return new VarExportable($var);
     }
 
-    return new VarExportable($var);
+    return $var;
 }
 
-/**
- * @param $var mixed
- * @return bool
- */
-function is_exportable($var): bool
+function is_exportable(mixed $var): bool
 {
     if (is_array($var)) {
         foreach ($var as $item) {
@@ -92,13 +78,7 @@ function is_exportable($var): bool
     return !is_object($var) || method_exists($var, '__set_state');
 }
 
-/**
- * @param $var mixed
- * @param bool $return
- * @return string|null
- * @throws PhpVersionNotSupportedException
- */
-function var_export($var, bool $return = false): ?string
+function var_export(mixed $var, bool $return = false): ?string
 {
     return \var_export(
         exportify($var),
@@ -106,13 +86,7 @@ function var_export($var, bool $return = false): ?string
     );
 }
 
-/**
- * @param string $path
- * @param $var
- * @return false|int
- * @throws PhpVersionNotSupportedException
- */
-function var_export_file(string $path, $var)
+function var_export_file(string $path, mixed $var): int|false
 {
     return \file_put_contents(
         $path,
@@ -123,11 +97,8 @@ function var_export_file(string $path, $var)
 /**
  * Allows for easy import of exported variables. If the variable is an array it will evaluate any
  * VarExportable objects in the array.
- *
- * @param $var mixed
- * @return mixed
  */
-function var_import($var)
+function var_import(mixed $var): mixed
 {
     if (\is_string($var)) {
         $var = \is_file($var) ? require $var : eval('return ' . $var . ';');

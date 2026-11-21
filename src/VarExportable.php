@@ -3,9 +3,9 @@
 namespace Henzeb\VarExportWrapper;
 
 use Closure;
-use Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Laravel\SerializableClosure\SerializableClosure;
 use Laravel\SerializableClosure\UnsignedSerializableClosure;
+use UnexpectedValueException;
 
 use function Henzeb\VarExportWrapper\Support\Functions\exportify;
 use function Henzeb\VarExportWrapper\Support\Functions\is_exportable;
@@ -13,12 +13,13 @@ use function Henzeb\VarExportWrapper\Support\Functions\var_import;
 
 class VarExportable
 {
-    private $object;
-    private ?string $class = null;
+    private mixed $object;
 
     /**
-     * @throws PhpVersionNotSupportedException
+     * @var class-string|null
      */
+    private ?string $class = null;
+
     public function __construct(
         object $var
     ) {
@@ -46,41 +47,41 @@ class VarExportable
         );
     }
 
+    /**
+     * @param array{object: mixed, class?: class-string|null} $state
+     * @return object
+     */
     public static function __set_state(array $state)
     {
         return self::setState($state['object'], $state['class'] ?? null);
     }
 
     /**
-     * @param object|string $export
-     * @param string|null $class
-     * @return object|Closure|mixed
-     * @throws PhpVersionNotSupportedException
+     * @param class-string|null $class
      */
-    private static function setState($export, ?string $class): object
+    private static function setState(mixed $export, ?string $class): object
     {
         if (is_string($export)) {
             $export = unserialize($export);
         }
 
-        if ($class) {
-            /** @var object $class */
-            return $class::__set_state(
-                var_import($export)
-            );
-        }
-
-        if ($export instanceof SerializableClosure
+        if ($class !== null && method_exists($class, '__set_state')) {
+            $export = $class::__set_state(var_import($export));
+        } elseif ($export instanceof SerializableClosure
             || $export instanceof UnsignedSerializableClosure
         ) {
             $export = $export->getClosure();
+        }
+
+        if (!is_object($export)) {
+            throw new UnexpectedValueException('The exported value could not be restored to an object.');
         }
 
         return $export;
     }
 
     /**
-     * @return Closure|mixed|object
+     * @return object
      */
     public function getObject()
     {
